@@ -49,3 +49,62 @@ variable "egress_protocol" {
 variable "SonarQube_port" {
   default = "9000"
 }
+
+# Docker AMI which ubuntun and london eu-west 2 region
+variable "AMI-ubuntu" {
+  default = "ami-09744628bed84e434"
+}
+
+variable "redhat-london" {
+  default = "ami-08d9bb4bfe39be5c2"
+}
+
+variable "instanceType-t2-micro" {
+  default = "t2.micro"
+}
+
+variable "instanceType-t2-medium" {
+  default = "t2.medium"
+}
+
+variable "pub-key" {
+  default = ""
+}
+
+
+variable "docker-prod-SG-ID" {
+  default = ""
+}
+
+variable "docker-stage-SG-ID" {
+  default = ""
+}
+
+variable "bastion-SG-ID" {
+  default = ""
+}
+
+variable "tls_private_key" {
+  default = ""
+}
+
+variable "ansible-SG-ID" {
+  default = ""
+}
+
+
+variable "docker-stage-ip" {
+  default = ""
+}
+
+variable "docker-prod-ip" {
+  default = ""
+}
+
+variable "jenkins-SG-ID" {
+  default = ""
+}
+
+variable "sonarqube-SG-ID" {
+  default = ""
+}

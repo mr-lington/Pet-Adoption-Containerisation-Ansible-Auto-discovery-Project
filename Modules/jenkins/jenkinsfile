@@ -1,0 +1,65 @@
+pipeline {
+    agent any 
+    tools {
+        maven 'lington-maven'
+    } 
+
+    stages {
+        stage('Pull code from Github'){
+            steps{
+                git branch: 'main', 
+                credentialsId: 'git', 
+                url: 'https://github.com/CloudHight/Pet-Adoption-Containerisation-Project-Application-Day-Team.git'
+            }
+        } 
+
+        stage('CODE ANALYSIS'){
+            steps{
+                withSonarQubeEnv('lington-sonar'){
+                    sh 'mvn sonar:sonar -Dsonar.java.binaries=target/classes'
+                }
+            } 
+        } 
+
+        stage('code quality approval'){
+            steps{
+                waitForQualityGate abortPipeline: true,
+                credentialsId: 'lington-sonar'
+            }
+        } 
+
+
+        stage('Build Code'){
+            steps{
+                sh 'mvn package -Dmaven.test.skip'
+            }
+        }
+
+        stage('Send Artifacts to Ansible server'){
+            steps{
+                sshagent(['jenkins-ansible']) {
+                    sh 'scp -o StrictHostKeyChecking=no /var/lib/jenkins/workspace/lington-client/target/spring-petclinic-2.4.2.war ubuntu@35.177.198.131:/opt/docker'
+                }
+            }
+        } 
+
+        stage('Trigger Stage Playbook'){
+            steps{
+                sshagent(['jenkins-ansible']) {
+                   sh 'ssh -o StrictHostKeyChecking=no ubuntu@35.177.198.131 "ansible-playbook -i /etc/ansible/hosts /opt/docker/docker_image.yaml && ansible-playbook -i /etc/ansible/hosts /opt/docker/docker_stage.yaml"'  
+                }
+            }
+        } 
+
+        stage('Deploy to prod'){
+            input{
+                message "Do you want to proceed to Production Deployment?"
+                }
+                steps{
+                sshagent(['jenkins-ansible']) {
+                   sh 'ssh -o StrictHostKeyChecking=no ubuntu@35.177.198.131 "ansible-playbook -i /etc/ansible/hosts /opt/docker/docker_prod.yaml"' 
+                }
+            }
+        } 
+}
+}
