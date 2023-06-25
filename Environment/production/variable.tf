@@ -108,3 +108,35 @@ variable "jenkins-SG-ID" {
 variable "sonarqube-SG-ID" {
   default = ""
 }
+
+# ALB ingress application traffic for docker
+variable "app_port" {
+  default = 8080
+}
+
+# the server that the load balancer attachment
+variable "target_id_docker_stage" {
+  default = ""
+}
+
+# ALB unsecured listener traffic for docker stage
+variable "unsecured_listener_port" {
+  default = 80
+}
+
+# the server that the load balancer attachment
+variable "target_id_docker_prod" {
+  default = ""
+}
+
+variable "stage-ALB-SG" {
+  default = ""
+}
+
+variable "prod-ALB-SG" {
+  default = ""
+}
+
+variable "iam_instance_profile-name" {
+  default = ""
+}

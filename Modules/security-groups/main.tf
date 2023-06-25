@@ -136,13 +136,14 @@ resource "aws_security_group" "docker_stage_lington_BackEndSG" {
   }
 
 # this line points to docker stage load balancer SG
-  #  ingress {
-#     description     = "http"
-#     from_port       = 8080
-#     to_port         = 8080
-#     protocol        = "tcp"
-#     security_groups = [aws_security_group.docker_stage_set14_team1.id]
-#   }
+   ingress {
+    description     = "http"
+    from_port       = var.app_port
+    to_port         = var.app_port
+    protocol        = "tcp"
+    security_groups = [var.stage-ALB-SG]
+    
+  }
 
   egress {
     from_port   = var.egress_from_and_to
@@ -170,14 +171,14 @@ resource "aws_security_group" "docker_prod_lington_BackEndSG" {
     security_groups = [aws_security_group.ansible_lington_FrontEndSG.id, aws_security_group.bastion_lington_FrontEndSG.id]
   }
 
-# # this line points to docker production load balancer SG
-# ingress {
-#     description     = "http"
-#     from_port       = 8080
-#     to_port         = 8080
-#     protocol        = "tcp"
-#     security_groups = [aws_security_group.docker_prod_set14_team1.id]
-# }
+# this line points to docker production load balancer SG
+ingress {
+    description     = "http"
+    from_port       = var.app_port
+    to_port         = var.app_port
+    protocol        = "tcp"
+    security_groups = [var.prod-ALB-SG]
+}
 
   egress {
     from_port   = var.egress_from_and_to

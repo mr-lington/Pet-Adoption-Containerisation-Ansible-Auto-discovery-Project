@@ -6,6 +6,9 @@ sudo apt-add-repository ppa:ansible/ansible
 sudo apt update -y
 sudo apt install ansible -y
 sudo hostnamectl set-hostname ansible
+sudo apt install python3-pip -y
+ansible-galaxy collection install amazon.aws
+pip install boto3
 sudo apt install docker.io -y
 sudo mkdir /opt/docker
 sudo chown -R ubuntu:ubuntu /opt/docker
@@ -29,6 +32,7 @@ ${var.docker-stage-ip} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ub
 [docker_prod]
 ${var.docker-prod-ip} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa
 EOT
+
 
 touch /opt/docker/Dockerfile
 cat <<EOT>> /opt/docker/Dockerfile

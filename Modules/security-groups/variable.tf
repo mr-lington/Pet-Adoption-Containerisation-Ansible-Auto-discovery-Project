@@ -25,3 +25,12 @@ variable "SonarQube_port" {
 variable "allow_all_IP" {
   
 }
+
+variable "app_port" {
+}
+
+variable "stage-ALB-SG" {
+}
+
+variable "prod-ALB-SG" {
+}
