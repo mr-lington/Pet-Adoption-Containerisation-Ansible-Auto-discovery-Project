@@ -12,7 +12,7 @@ output "docker-production-ip" {
 }
 
 output "jenkins-ip" {
-  value = module.efe-jenkins.jenkins-ip 
+  value = module.efe-jenkins.jenkins-ip
 }
 
 output "sonarqude-ip" {
@@ -25,4 +25,12 @@ output "ansible-ip" {
 
 output "bastion-ip" {
   value = module.efe-bastion-host.bastion-ip
+}
+
+output "stage-load-balancer-dns" {
+  value = module.efe-docker-stage-ALB.docker_stage_ALB_dns_name
+}
+
+output "prod-load-balancer-dns" {
+  value = module.efe-docker-prod-ALB.docker_prod_ALB_dns_name
 }
