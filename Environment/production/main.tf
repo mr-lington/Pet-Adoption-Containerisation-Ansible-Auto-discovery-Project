@@ -23,8 +23,8 @@ module "efe-security-groups" {
   egress_protocol    = var.egress_protocol
   allow_all_IP       = var.allow_all_IP
   app_port           = var.app_port
-  prod-ALB-SG = module.efe-docker-prod-ALB.docker-prod-ALB-SG
-  stage-ALB-SG = module.efe-docker-stage-ALB.docker-stage-ALB-SG
+  prod-ALB-SG        = module.efe-docker-prod-ALB.docker-prod-ALB-SG
+  stage-ALB-SG       = module.efe-docker-stage-ALB.docker-stage-ALB-SG
 }
 
 module "efe-keypair" {
@@ -69,7 +69,7 @@ module "efe-ansible" {
   tls_private_key        = module.efe-keypair.out-priv-key
   docker-stage-ip        = module.efe-docker-stage.docker-stage-ip
   docker-prod-ip         = module.efe-docker-prod.docker-production-ip
-  
+
 }
 
 module "efe-jenkins" {
@@ -106,14 +106,24 @@ module "efe-docker-stage-ALB" {
 }
 
 module "efe-docker-prod-ALB" {
-  source                  = "../../modules/docker-prod-alb"
-  vpc_id                  = module.efe-vpc.vpc_id
-  app_port                = var.app_port
-  target_id_docker_prod   = module.efe-docker-prod.docker-prod-server-id
-  pubsub2                 = module.efe-subnet.pubsub2
-  pubsub1                 = module.efe-subnet.pubsub1
-  unsecured_listener_port = var.unsecured_listener_port
-  egress_from_and_to      = var.egress_from_and_to
-  egress_protocol         = var.egress_protocol
-  allow_all_IP            = var.allow_all_IP
+  source                = "../../modules/docker-prod-alb"
+  vpc_id                = module.efe-vpc.vpc_id
+  app_port              = var.app_port
+  target_id_docker_prod = module.efe-docker-prod.docker-prod-server-id
+  pubsub2               = module.efe-subnet.pubsub2
+  pubsub1               = module.efe-subnet.pubsub1
+  secured_listener_port = var.secured_listener_port
+  secured_https = var.secured_https
+  egress_from_and_to    = var.egress_from_and_to
+  egress_protocol       = var.egress_protocol
+  allow_all_IP          = var.allow_all_IP
+   petadopt-signed-cert  = module.efe-route53-ssl.petadopt-signed-cert
+}
+
+
+module "efe-route53-ssl" {
+  source                   = "../../modules/route53"
+  domain_name              = var.domain_name
+  docker_prod_ALB_dns_name = module.efe-docker-prod-ALB.docker_prod_ALB_dns_name
+  docker_prod_ALB_zone_id  = module.efe-docker-prod-ALB.docker_prod_ALB_zone_id
 }

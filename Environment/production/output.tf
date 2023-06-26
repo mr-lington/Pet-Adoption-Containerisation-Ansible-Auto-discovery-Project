@@ -34,3 +34,8 @@ output "stage-load-balancer-dns" {
 output "prod-load-balancer-dns" {
   value = module.efe-docker-prod-ALB.docker_prod_ALB_dns_name
 }
+
+output "route53-nameservers" {
+  value = module.efe-route53-ssl.route53-nameservers
+}
+

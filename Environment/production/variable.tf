@@ -140,3 +140,32 @@ variable "prod-ALB-SG" {
 variable "iam_instance_profile-name" {
   default = ""
 }
+
+# DOMAIN NAME
+variable "domain_name" {
+  default = "greatestshalomventures.com"
+}
+
+# docker prod ALB dns name
+variable "docker_prod_ALB_dns_name" {
+  default = ""
+}
+
+# docker prod ALB zone id
+variable "docker_prod_ALB_zone_id" {
+  default = ""
+}
+
+variable "petadopt-signed-cert" {
+  default = ""
+}
+
+variable "secured_listener_port" {
+  default = "443"
+
+}
+
+# ALB secured https traffic/access for docker prod
+variable "secured_https" {
+  default = 443
+}
