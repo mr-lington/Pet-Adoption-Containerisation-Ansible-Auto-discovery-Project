@@ -18,8 +18,8 @@ variable "pubsub1" {
   
 }
 
-# ALB unsecured listener traffic for docker prod
-variable "unsecured_listener_port" {
+# ALB secured https traffic/access for docker prod
+variable "secured_https" {
 }
 
 # allow all IP
@@ -33,4 +33,12 @@ variable "egress_from_and_to" {
 
 variable "egress_protocol" {
   
+}
+
+# ALB secured listener traffic port for docker prod
+variable "secured_listener_port" {
+  
+}
+
+variable "petadopt-signed-cert" {
 }

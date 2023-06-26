@@ -34,15 +34,17 @@ resource "aws_lb" "lington_docker_prod_ALB" {
 
 
   tags = {
-    Environment = "Testing"
+    Environment = "Production"
   }
 }
 
 #Create prod Load Balancer Listener
 resource "aws_lb_listener" "lington_docker_prod_ALB_listener" {
   load_balancer_arn = aws_lb.lington_docker_prod_ALB.arn
-  port              = var.unsecured_listener_port
-  protocol          = "HTTP"
+  port              = var.secured_listener_port
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.petadopt-signed-cert
 
   default_action {
     type             = "forward"
@@ -67,9 +69,9 @@ resource "aws_security_group" "docker_prod_ALB_SG" {
   }
 
   ingress {
-    description = "listener traffic"
-    from_port   = var.unsecured_listener_port
-    to_port     = var.unsecured_listener_port
+    description = "https access"
+    from_port   = var.secured_https
+    to_port     = var.secured_https
     protocol    = "tcp"
     cidr_blocks = [var.allow_all_IP]
   }
@@ -83,5 +85,6 @@ resource "aws_security_group" "docker_prod_ALB_SG" {
 
   tags = {
     Name = "docker_prod_ALB_SG"
+
   }
 }
