@@ -32,7 +32,7 @@ ${var.docker-stage-ip} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ub
 [docker_prod]
 ${var.docker-prod-ip} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa
 EOT
-
+sudo echo "*/20 * * * * ubuntu ansible-playbook -i /etc/ansible/hosts /opt/docker/get-newIP.yaml" > /etc/crontab
 
 touch /opt/docker/Dockerfile
 cat <<EOT>> /opt/docker/Dockerfile
@@ -134,6 +134,100 @@ cat <<EOT>> /opt/docker/docker_prod.yaml
 
    - name: Create docker container for stage from the image we pulled from dockerhub
      command: docker run -itd  --name test-docker-container -p 8080:8085 lington/super-docker-image
+EOT
+
+cat <<EOT>> /opt/docker/get-newIP.yaml
+---
+ - name: sending ip created from ASG to ansible inventory file and also saving the docker stage and prod ip address in a new file
+   hosts: localhost
+   connection: local
+   user: ubuntu
+
+   
+   tasks:
+   - name: Get IP Address in the Inventory host file /etc/ansible/hosts ie docker_stage & docker_prod
+     set_fact: 
+       stage="{{groups['docker_stage'] | join(',')}}"
+       prod="{{groups['docker_prod'] | join(',')}}"
+
+   - name: store docker prod and stage inventory file in another file /opt/docker/oldStageIp.yaml & /opt/docker/oldProdIp.yaml
+     shell:
+       echo "{{stage}}" ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa >  /opt/docker/oldStageIp.yaml
+       echo "{{prod}}" ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa >  /opt/docker/oldProdIp.yaml
+
+   - name: getting list of new instances created by ASG
+     amazon.aws.ec2_instance_info: 
+       region: eu-west-2 
+       filters: 
+         "tag:Name": ["docker-prod-ASG"]  
+     register: ec2_instance_info
+
+   - set_fact:
+       msg: "{{ec2_instance_info | json_query('instances[*].private_ip_address')}}"
+   - debug:
+       var: msg
+     register: ec2_privateIP     
+
+   - name: store new ec2 IP created by ASG in a new file
+     shell: |
+       echo "{{msg}}" > /opt/docker/docker-prod-ASGIP.yaml  
+
+   - name: update the new ec2 IP created from ASG in the Inventory file
+     become: yes
+     shell: |
+        echo "[docker-prod-ASG]" > /etc/ansible/hosts;
+        {% for ip in range(ec2_privateIP['msg']|length)%}
+        echo "{{ec2_privateIP['msg'][ip]}} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa" >> /etc/ansible/hosts
+        {%endfor%}
+        echo "[docker_stage]" >> /etc/ansible/hosts
+        cat /opt/docker/oldStageIp.yaml >> /etc/ansible/hosts
+        echo "[docker_prod]" >> /etc/ansible/hosts
+        cat /opt/docker/oldProdIp.yaml >> /etc/ansible/hosts
+
+   - name: echo
+     shell: |
+       echo "New ip Address in Inventory File"
+       echo " Ready to deploy App to new Ip" 
+
+   - name: Deploying Applications to new ASG Servers
+     shell: |
+       ansible-playbook -i /etc/ansible/hosts /opt/docker/deploy-newIP.yaml  
+     register: deploying
+
+   - debug: 
+         msg:  "{{deploying.stdout}}"
+EOT
+
+cat <<EOT>> /opt/docker/deploy-newIP.yaml
+---
+ - name: this is a ansible playbook for docker prod for production environment
+   hosts: docker-prod-ASG
+   become: true
+
+   tasks:
+   - name: login  to our docker hub account
+     command: docker login --username=lington --password=@Darboy123
+     
+   
+   - name: lets assume that our container is already running so we need to stop it
+     command: docker stop test-docker-container
+     ignore_errors: yes
+
+   - name: remove docker stopped docker container
+     command: docker rm test-docker-container
+     ignore_errors: yes
+
+   - name: remove the docker image after pushing
+     command: docker rmi lington/super-docker-image lington-docker-image
+     ignore_errors: yes
+
+   - name: pull docker image from docker hub account
+     command: docker pull lington/super-docker-image
+     ignore_errors: yes
+
+   - name: Create docker container for stage from the image we pulled from dockerhub
+     command: docker run -itd  --name test-docker-container -p 8080:8085 lington/super-docker-image
+     ignore_errors: yes
 EOT
 EOF
 }

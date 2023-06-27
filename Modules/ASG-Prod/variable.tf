@@ -20,3 +20,4 @@ variable "prvsub2" {
 
 variable "docker_prod_lb_tg_arn" {
 }
+

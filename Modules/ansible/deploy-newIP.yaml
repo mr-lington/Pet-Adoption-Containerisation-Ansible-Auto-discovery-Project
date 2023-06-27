@@ -1,0 +1,32 @@
+touch /opt/docker/deploy-newIP.yaml
+cat <<EOT>> /opt/docker/deploy-newIP.yaml
+---
+ - name: deploying apps into the instance created by ASG
+   hosts: asg-servers
+   become: true
+
+   tasks:
+   - name: login  to our docker hub account
+     command: docker login --username=cloudhight --password=CloudHight_Admin123@
+    
+   
+   - name: lets assume that our container is already running so we need to stop it
+     command: docker stop set14-docker-container
+     ignore_errors: yes
+
+   - name: remove docker stopped docker container
+     command: docker rm set14-docker-container
+     ignore_errors: yes
+
+   - name: remove the docker image after pushing
+     command: docker rmi cloudhight/set14-docker-image set14-docker-image
+     ignore_errors: yes
+
+   - name: pull docker image from docker hub account
+     command: docker pull cloudhight/set14-docker-image
+     ignore_errors: yes
+
+   - name: Create docker container for stage from the image we pulled from dockerhub
+     command: docker run -itd  --name set14-docker-container -p 8080:8085 cloudhight/set14-docker-image
+     ignore_errors: yes
+EOT

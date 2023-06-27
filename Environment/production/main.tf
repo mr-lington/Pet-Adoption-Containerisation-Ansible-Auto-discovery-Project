@@ -69,6 +69,7 @@ module "efe-ansible" {
   tls_private_key        = module.efe-keypair.out-priv-key
   docker-stage-ip        = module.efe-docker-stage.docker-stage-ip
   docker-prod-ip         = module.efe-docker-prod.docker-production-ip
+  iam_instance_profile = module.efe-IAM.ansible-iam-instance-profile
 
 }
 
@@ -113,11 +114,11 @@ module "efe-docker-prod-ALB" {
   pubsub2               = module.efe-subnet.pubsub2
   pubsub1               = module.efe-subnet.pubsub1
   secured_listener_port = var.secured_listener_port
-  secured_https = var.secured_https
+  secured_https         = var.secured_https
   egress_from_and_to    = var.egress_from_and_to
   egress_protocol       = var.egress_protocol
   allow_all_IP          = var.allow_all_IP
-   petadopt-signed-cert  = module.efe-route53-ssl.petadopt-signed-cert
+  petadopt-signed-cert  = module.efe-route53-ssl.petadopt-signed-cert
 }
 
 
@@ -126,4 +127,19 @@ module "efe-route53-ssl" {
   domain_name              = var.domain_name
   docker_prod_ALB_dns_name = module.efe-docker-prod-ALB.docker_prod_ALB_dns_name
   docker_prod_ALB_zone_id  = module.efe-docker-prod-ALB.docker_prod_ALB_zone_id
+}
+
+module "efe-docker-prod-ASG" {
+  source                = "../../modules/ASG-prod"
+  source_instance_id    = module.efe-docker-prod.docker-prod-server-id
+  instanceType-t2-micro = var.instanceType-t2-micro
+  pub-key               = module.efe-keypair.out-pub-key
+  prvsub1               = module.efe-subnet.prvsub1
+  prvsub2               = module.efe-subnet.prvsub2
+  docker-prod-SG-ID     = [module.efe-security-groups.docker-prod-SG-ID]
+  docker_prod_lb_tg_arn = module.efe-docker-prod-ALB.docker_prod_lb_tg_arn
+}
+
+module "efe-IAM" {
+  source = "../../modules/IAM"
 }

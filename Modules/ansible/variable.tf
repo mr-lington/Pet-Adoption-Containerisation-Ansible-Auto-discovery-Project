@@ -29,3 +29,7 @@ variable "docker-stage-ip" {
 variable "docker-prod-ip" {
   
 }
+
+variable "iam_instance_profile" {
+  
+}

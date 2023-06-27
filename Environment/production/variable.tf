@@ -169,3 +169,11 @@ variable "secured_listener_port" {
 variable "secured_https" {
   default = 443
 }
+
+variable "docker_prod_lb_tg_arn" {
+  default = ""
+}
+
+variable "iam_instance_profile" {
+  default = ""
+}

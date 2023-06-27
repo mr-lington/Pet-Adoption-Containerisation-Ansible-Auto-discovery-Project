@@ -1,0 +1,70 @@
+# set_fact ==== it is a module that allows you to set variables dynamically within a playbook, 
+#               it is used to store informations that can be reused throughout the playbook or
+#                shared with other host, the set_fact module is used within a task
+# debug ======  this module is used to print out value of a variable e.g debug:
+#                                                                          var:
+# shell =====  this module is used to run a command
+
+
+touch /opt/docker/get-newIP.yaml
+cat <<EOT>> /opt/docker/get-newIP.yaml
+---
+ - name: sending ip created from ASG to ansible inventory file and also saving the docker stage and prod ip address in a new file
+   hosts: localhost
+   connection: local
+   user: ubuntu
+
+   
+   tasks:
+   - name: Get IP Address in the Inventory host file /etc/ansible/hosts ie docker_stage & docker_prod
+     set_fact: 
+       stage="{{groups['docker_stage'] | join(',')}}"
+       prod="{{groups['docker_prod'] | join(',')}}"
+
+   - name: store docker prod and stage inventory file in another file /opt/docker/oldStageIp.yaml & /opt/docker/oldProdIp.yaml
+     shell:
+       echo "{{stage}}" ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa >  /opt/docker/oldStageIp.yaml
+       echo "{{prod}}" ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa >  /opt/docker/oldProdIp.yaml
+
+   - name: getting list of new instances created by ASG
+     amazon.aws.ec2_instance_info: 
+       region: eu-west-2 
+       filters: 
+         "tag:Name": ["docker-prod-ASG"]  
+     register: ec2_instance_info
+
+   - set_fact:
+       msg: "{{ec2_instance_info | json_query('instances[*].private_ip_address')}}"
+   - debug:
+       var: msg
+     register: ec2_privateIP     
+
+   - name: store new ec2 IP created by ASG in a new file
+     shell: |
+       echo "{{msg}}" > /opt/docker/docker-prod-ASGIP.yaml  
+
+   - name: update the new ec2 IP created from ASG in the Inventory file
+     become: yes
+     shell: |
+        echo "[docker-prod-ASG]" > /etc/ansible/hosts;
+        {% for ip in range(ec2_privateIP['msg']|length)%}
+        echo "{{ec2_privateIP['msg'][ip]}} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/anskey_rsa" >> /etc/ansible/hosts
+        {%endfor%}
+        echo "[docker_stage]" >> /etc/ansible/hosts
+        cat /opt/docker/oldStageIp.yaml >> /etc/ansible/hosts
+        echo "[docker_prod]" >> /etc/ansible/hosts
+        cat /opt/docker/oldProdIp.yaml >> /etc/ansible/hosts
+
+   - name: echo
+     shell: |
+       echo "New ip Address in Inventory File"
+       echo " Ready to deploy App to new Ip" 
+
+   - name: Deploying Applications to new ASG Servers
+     shell: |
+       ansible-playbook -i /etc/ansible/hosts /opt/docker/deploy-newIP.yaml  
+     register: deploying
+
+   - debug: 
+         msg:  "{{deploying.stdout}}"
+EOT         

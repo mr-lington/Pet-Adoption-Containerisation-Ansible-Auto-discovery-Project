@@ -10,6 +10,6 @@ output "docker_prod_ALB_zone_id" {
   value = aws_lb.lington_docker_prod_ALB.zone_id
 }
 
-# output "docker_prod_lb_tg_arn" {
-#   value = aws_lb_target_group.lington_docker_prod_ALB_TG.arn
-# }
+output "docker_prod_lb_tg_arn" {
+  value = aws_lb_target_group.lington_docker_prod_ALB_TG.arn
+}
